@@ -307,10 +307,11 @@ ServiceFabricBackup/
 FakesAssemblies/
 
 # Build artifacts
-**/*.tlog/
+*.tlog
 *.tlog
 *.lastbuildstate
 *.exp
+*.FileListAbsolute.txt
 
 
 # GhostDoc plugin setting file
