@@ -1,0 +1,10 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(467,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (ColorFunc.vcxproj, RPG VX Ace SDK.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+cl : command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+  stdafx.cpp
+cl : command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+  Logic.cpp
+  PaletteSwap.cpp
+  Generating Code...
+PaletteSwap.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
+     Creating library C:\Users\mlequime\Documents\RPG-Maker-Color-Func\Debug\PaletteSwap.lib and object C:\Users\mlequime\Documents\RPG-Maker-Color-Func\Debug\PaletteSwap.exp
+  PaletteSwap.vcxproj -> C:\Users\mlequime\Documents\RPG-Maker-Color-Func\Debug\PaletteSwap.dll

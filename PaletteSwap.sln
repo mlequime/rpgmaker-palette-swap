@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ColorFunc", "PaletteSwap\PaletteSwap.vcxproj", "{626B52BB-758C-4856-BFB4-EEB97D2F9C35}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{626B52BB-758C-4856-BFB4-EEB97D2F9C35}.Debug|Win32.ActiveCfg = Debug|Win32
+		{626B52BB-758C-4856-BFB4-EEB97D2F9C35}.Debug|Win32.Build.0 = Debug|Win32
+		{626B52BB-758C-4856-BFB4-EEB97D2F9C35}.Release|Win32.ActiveCfg = Release|Win32
+		{626B52BB-758C-4856-BFB4-EEB97D2F9C35}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DC34702B-03C4-44E5-8D3C-6263B5A622D5}
+	EndGlobalSection
+EndGlobal

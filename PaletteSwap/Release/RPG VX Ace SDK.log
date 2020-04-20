@@ -1,0 +1,10 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(391,5): warning MSB8028: The intermediate directory (Release\) contains files shared from another project (ColorFunc.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  PaletteSwap.cpp
+     Creating library C:\Users\mlequime\Documents\RPG-Maker-Color-Func\Release\PaletteSwap.lib and object C:\Users\mlequime\Documents\RPG-Maker-Color-Func\Release\PaletteSwap.exp
+  Generating code
+  All 558 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  RPG VX Ace SDK.vcxproj -> C:\Users\mlequime\Documents\RPG-Maker-Color-Func\Release\PaletteSwap.dll
+  Move to game folder
+          1 file(s) copied.
+  No error found
