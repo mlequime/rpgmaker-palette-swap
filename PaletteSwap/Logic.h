@@ -4,5 +4,5 @@
 
 using namespace std;
 
-RGSSApi bool Colorize(unsigned int object, char* palette);
+RGSSApi bool Colorize(unsigned int object, char* og_palette, char* palette);
 

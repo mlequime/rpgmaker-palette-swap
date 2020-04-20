@@ -18,7 +18,6 @@ typedef union {
 	};
 } RGSSRGBA;
 
-
 typedef struct {
 	DWORD unk1;
 	DWORD unk2;
@@ -55,7 +54,7 @@ typedef struct {
 } PALETTE;
 
 
-PALETTE parsePalette(char* _input)
+std::vector<COLOR> parsePalette(char* _input)
 {
 	std::string input(_input);
 	std::stringstream  stream(input);
@@ -75,11 +74,10 @@ PALETTE parsePalette(char* _input)
 
 		parsedCsv.push_back(color);
 	}
-	PALETTE palette = { parsedCsv.at(0), parsedCsv.at(1), parsedCsv.at(2), parsedCsv.at(3) };
-	return palette;
+	return parsedCsv;
 };
 
-RGSSApi bool Colorize(unsigned int object, char* palette)
+RGSSApi bool Colorize(unsigned int object, char* og_palette, char* palette)
 {
 	#pragma warning (disable:4312)
 	RGSSBMINFO *bitmap = ((RGSSBITMAP*)(object << 1))->bm->bminfo;
@@ -87,7 +85,7 @@ RGSSApi bool Colorize(unsigned int object, char* palette)
 
 	long width, height;
 	RGSSRGBA *row;
-	long x, y;
+	long x, y, i;
 	int red, green, blue;
 	if (!bitmap) {
 		return false;
@@ -98,45 +96,32 @@ RGSSApi bool Colorize(unsigned int object, char* palette)
 
 	row = bitmap->lastRow;
 
-	PALETTE parsedPalette = parsePalette(palette);
+	std::vector<COLOR> ogPalette = parsePalette(og_palette);
+	std::vector<COLOR> newPalette = parsePalette(palette);
+	const int size = ogPalette.size();
+	const int newSize = newPalette.size();
+
+	int changeAt = -1;
 
 	for (y = 0; y < height; y++) {
 		for (x = 0; x < width; x++) {
+			changeAt = -1;
 			red = row->red;
 			green = row->green;
 			blue = row->blue;
 
-			if (y == 30) {
-				cout << red << "," << green << "," << blue;
+			for (i = 0; i < size; i++) {
+				COLOR curColor = ogPalette.at(i);
+				if ((red == curColor.red) && (green == curColor.green) && (blue == curColor.blue)) {
+					changeAt = i;
+				}
 			}
-
-			if ((red == 75) && (green = 75) && (blue == 75)) {
-				red = parsedPalette.border.red;
-				green = parsedPalette.border.green;
-				blue = parsedPalette.border.blue;
-			}
-			else if ((red == 105) && (green = 105) && (blue == 105)) {
-				red = parsedPalette.shadow.red;
-				green = parsedPalette.shadow.green;
-				blue = parsedPalette.shadow.blue;
-			}
-			else if ((red == 135) && (green = 135) && (blue == 135)) {
-				red = parsedPalette.midtone.red;
-				green = parsedPalette.midtone.green;
-				blue = parsedPalette.midtone.blue;
-			}
-			else if ((red == 175) && (green = 175) && (blue == 175)) {
-				red = parsedPalette.highlight.red;
-				green = parsedPalette.highlight.green;
-				blue = parsedPalette.highlight.blue;
-			}
-			else {
-				row++;
-				continue;
-			}
-			row->red = (unsigned char)min(255, max(0, red));
-			row->green = (unsigned char)min(255, max(0, green));
-			row->blue = (unsigned char)min(255, max(0, blue));
+			if ((changeAt > -1) && (changeAt >= newSize == false)) {
+				COLOR newColor = newPalette.at(changeAt);
+				row->red = (unsigned char)min(255, max(0, newColor.red));
+				row->green = (unsigned char)min(255, max(0, newColor.green));
+				row->blue = (unsigned char)min(255, max(0, newColor.blue));
+			}			
 			row++;
 		}
 	}
