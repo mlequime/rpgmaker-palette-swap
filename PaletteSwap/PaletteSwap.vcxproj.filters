@@ -21,15 +21,9 @@
     <ClCompile Include="PaletteSwap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Logic.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Logic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PaletteSwap.h">

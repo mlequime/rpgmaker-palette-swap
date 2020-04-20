@@ -1,198 +1,129 @@
 #include "stdafx.h"
+#include <cstdlib>
+#include <cmath>
+#include <vector>
+#include <regex>
+#include "stdafx.h"
 #include "PaletteSwap.h"
-#include "Logic.h"
 
-HMODULE ModuleHandle;
-int RGSSVersion=0;
-bool Initialized=false;
+using namespace std;
 
-RGSSEVAL RGSSEval;
-RGSSGETBOOL RGSSGetBool;
-RGSSGETINT RGSSGetInt;
-RGSSGETDOUBLE RGSSGetDouble;
-// RGSSGETSTRINGUTF16 RGSSGetStringUTF16;
-// RGSSSETSTRINGUTF16 RGSSSetStringUTF16;
+typedef union {
+	unsigned int pixel;
+	struct {
+		unsigned char blue;
+		unsigned char green;
+		unsigned char red;
+		unsigned char alpha;
+	};
+} RGSSRGBA;
 
-// This hack will initialize the DLL the first time it is called from RPG Maker VX Ace
+typedef struct {
+	DWORD unk1;
+	DWORD unk2;
+	BITMAPINFOHEADER* infoheader;
+	RGSSRGBA* firstRow;
+	RGSSRGBA* lastRow;
+} RGSSBMINFO;
 
-class InitSpawn
+typedef struct {
+	DWORD unk1;
+	DWORD unk2;
+	RGSSBMINFO* bminfo;
+} BITMAPSTRUCT;
+
+typedef struct {
+	DWORD flags;
+	DWORD klass;
+	void(*dmark) (void*);
+	void(*dfree) (void*);
+	BITMAPSTRUCT* bm;
+} RGSSBITMAP;
+
+typedef struct {
+	int red;
+	int green;
+	int blue;
+} COLOR;
+
+typedef struct {
+	COLOR border;
+	COLOR shadow;
+	COLOR midtone;
+	COLOR highlight;
+} PALETTE;
+
+
+std::vector<COLOR> parsePalette(char* _input)
 {
-public:
-	InitSpawn::InitSpawn()
+	std::string input(_input);
+	std::stringstream  stream(input);
+	std::string line;
+	std::vector<COLOR> parsedCsv;
+	while (std::getline(stream, line))
 	{
-		Initialize();
+		std::stringstream lineStream(line);
+		std::string cell;
+		std::vector<std::string> parsedRow;
+		while (std::getline(lineStream, cell, ','))
+		{
+			parsedRow.push_back(cell);
+		}
+
+		COLOR color = { std::stoi(parsedRow.at(0)), std::stoi(parsedRow.at(1)), std::stoi(parsedRow.at(2)) };
+
+		parsedCsv.push_back(color);
 	}
+	return parsedCsv;
 };
 
-InitSpawn InitDLL;
-
-void RGSSSetString(char *StringName, char *StringData)
+RGSSApi bool Colorize(unsigned int object, char* og_palette, char* palette)
 {
-	char *buffer=NULL;
-	size_t BufferLength=0;
+#pragma warning (disable:4312)
+	RGSSBMINFO* bitmap = ((RGSSBITMAP*)(object << 1))->bm->bminfo;
+#pragma warning (default:4312)
 
-	BufferLength=strlen(StringName)+strlen(StringData)+6;
-	buffer = new char[BufferLength];
-
-	strcpy_s(buffer,BufferLength,StringName);
-	strcat_s(buffer,BufferLength," = \"");
-	strcat_s(buffer,BufferLength,StringData);
-	strcat_s(buffer,BufferLength,"\"");
-	RGSSEval(buffer);
-
-	delete[] buffer;
-	return;
-}
-
-void RGSSSetInt(char *VariableName,int Value)
-{
-	std::ostringstream Buffer;
-	Buffer << Value;
-
-	if(Buffer.good())
-		RGSSSetString(VariableName,(char *)Buffer.str().c_str());
-	else
-		RGSSSetString(VariableName,"0");
-	return;
-}
-
-void RGSSSetDouble(char *VariableName,double Value)
-{
-	std::ostringstream Buffer;
-	Buffer << Value;
-
-	if (Buffer.good())
-		RGSSSetString(VariableName,(char *)Buffer.str().c_str());
-	else
-		RGSSSetString(VariableName,"0.0");
-	return;
-}
-
-void RGSSSetBool(char *VariableName,bool Value)
-{
-	if (Value)
-		RGSSSetString(VariableName,"true");
-	else
-		RGSSSetString(VariableName,"false");
-	return;
-}
-
-
-RGSSApi bool Initialize()
-{
-	if(Initialized)
-	{
-		std::cout << "Already initialized." << std::endl;
-		return(true);
-	}
-
-	HMODULE RGSSSystemDLL=NULL;
-	TCHAR DLLName[MAX_PATH];
-	TCHAR RGSSSystemFilePath[MAX_PATH];
-	TCHAR IniDir[MAX_PATH];
-
-	GetModuleFileName(ModuleHandle,DLLName,MAX_PATH);
-
-	_tprintf (_T("Initializing %s.\n"),DLLName);
-
-	GetCurrentDirectory(MAX_PATH,IniDir);
-	_tcsncat_s(IniDir,MAX_PATH,_T("\\game.ini"),MAX_PATH);
-
-	_tprintf (_T("Game.ini is at %s\n"),IniDir);
-
-	GetPrivateProfileString(_T("Game"),_T("Library"),_T("RGSS301xxx.dll"),RGSSSystemFilePath,MAX_PATH,IniDir);
-
-	/* As the RGSS dll will always be loaded at this point. (The RGSS dll will be the one calling this dll).
-	   Use GetModuleHandle instead of LoadLibrary. It's quicker and won't add a reference to the RGSS module
-	   that could result in a deadlock when the program exits. */
-
-	RGSSSystemDLL=GetModuleHandle(RGSSSystemFilePath);
-
-	_tprintf(_T("Looking for %s.\n"),RGSSSystemFilePath);
-
-	if (!RGSSSystemDLL)
-	{
-		std::cerr << "Unable to find RGSS system file (" << RGSSSystemFilePath << ")" << std::endl;
-		return false;  // Failed to get module handle for RGSS dll.
-	}
-
-	if(GetProcAddress(RGSSSystemDLL,"RGSSInitialize"))
-	{
-		std::cout << "Running RPG Maker XP." << std::endl;
-		RGSSVersion=1;
-	}
-	else if(GetProcAddress(RGSSSystemDLL,"RGSSInitialize2"))
-	{
-		std::cout << "Running RPG Maker VX." << std::endl;
-		RGSSVersion=2;
-	}
-	else if(GetProcAddress(RGSSSystemDLL,"RGSSInitialize3"))
-	{
-		std::cout << "Running RPG Maker VX Ace." << std::endl;
-		RGSSVersion=3;
-	}
-
-	RGSSEval=(RGSSEVAL)GetProcAddress(RGSSSystemDLL,"RGSSEval");
-	if (!RGSSEval)
-	{
-		std::cerr << "Unable to find RGSSEval" << std::endl;
+	long width, height;
+	RGSSRGBA* row;
+	long x, y, i;
+	int red, green, blue;
+	if (!bitmap) {
 		return false;
 	}
 
-	RGSSGetBool=(RGSSGETBOOL)GetProcAddress(RGSSSystemDLL,"RGSSGetBool");
-	if (!RGSSGetBool)
-	{
-		std::cerr << "Unable to find RGSSGetBool" << std::endl;
-		return false;
+	width = bitmap->infoheader->biWidth;
+	height = bitmap->infoheader->biHeight;
+
+	row = bitmap->lastRow;
+
+	std::vector<COLOR> ogPalette = parsePalette(og_palette);
+	std::vector<COLOR> newPalette = parsePalette(palette);
+	const int size = ogPalette.size();
+	const int newSize = newPalette.size();
+
+	int changeAt = -1;
+
+	for (y = 0; y < height; y++) {
+		for (x = 0; x < width; x++) {
+			changeAt = -1;
+			red = row->red;
+			green = row->green;
+			blue = row->blue;
+
+			for (i = 0; i < size; i++) {
+				COLOR curColor = ogPalette.at(i);
+				if ((red == curColor.red) && (green == curColor.green) && (blue == curColor.blue)) {
+					changeAt = i;
+				}
+			}
+			if ((changeAt > -1) && (changeAt >= newSize == false)) {
+				COLOR newColor = newPalette.at(changeAt);
+				row->red = (unsigned char)min(255, max(0, newColor.red));
+				row->green = (unsigned char)min(255, max(0, newColor.green));
+				row->blue = (unsigned char)min(255, max(0, newColor.blue));
+			}
+			row++;
+		}
 	}
-
-	RGSSGetInt=(RGSSGETINT)GetProcAddress(RGSSSystemDLL,"RGSSGetInt");
-	if (!RGSSGetInt)
-	{
-		std::cerr << "Unable to find RGSSGetInt" << std::endl;
-		return false;
-	}
-
-	RGSSGetDouble=(RGSSGETDOUBLE)GetProcAddress(RGSSSystemDLL,"RGSSGetDouble");
-	if (!RGSSGetDouble)
-	{
-		std::cerr << "Unable to find RGSSGetDouble" << std::endl;
-		return false;
-	}
-
-	/*
-	RGSSGetStringUTF16=(RGSSGETSTRINGUTF16)GetProcAddress(RGSSSystemDLL,"RGSSGetStringUTF16");
-	if (!RGSSGetStringUTF16)
-	{
-		std::cerr << "Unable to find RGSSGetStringUTF16" << std::endl;
-		return false;
-	}
-
-	RGSSSetStringUTF16=(RGSSSETSTRINGUTF16)GetProcAddress(RGSSSystemDLL,"RGSSSetStringUTF16");
-	if (!RGSSSetStringUTF16)
-	{
-		std::cerr << "Unable to find RGSSSetStringUTF16" << std::endl;
-		return false;
-	}
-*/
-	RGSSSetInt("$RGSSVERSION",RGSSVersion);
-/*
-	RGSSYourCustomInitCode();*/
-
-	std::cout << "All OK." << std::endl;
-
-	Initialized=true;
-
 	return true;
 }
-
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
-{
-	if (ul_reason_for_call==DLL_PROCESS_ATTACH)
-		ModuleHandle=hModule;
-    return TRUE;
-}
-
